@@ -14,12 +14,20 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-
     const page = +req.query.page || 1; // any thing that you pass after the questionmarks that is query parameter
-    const size = +req.query.size || 10;
+    const size = +req.query.size || 10; // || or operater use when size or page pass from query
     const skip = (page - 1) * size; // how many items do we skip
-    const products = await Product.find().skip(skip).limit(size).lean().exec();
-    const totalPages = Math.ceil((await Product.find().countDocuments())/size)
+    const search = req.query.search ; 
+    let products
+     let totalPages
+    if(!search){
+       products = await Product.find().skip(skip).limit(size).lean().exec();
+       totalPages = Math.ceil((await Product.find().countDocuments())/size)
+    }else{
+       products = await Product.find({name:search}).skip(skip).limit(size).lean().exec();
+       totalPages = Math.ceil((await Product.find().countDocuments())/size)
+    }
+    
     return res.status(200).send({products,totalPages});
   } catch (err) {
     return res.status(500).send(err.message); 
@@ -33,7 +41,7 @@ router.get("/", async (req, res) => {
 //  totalpage = Math.ceil(await Product.find().countDocument()/size)
 
 router.get("/:id", async (req, res) => {
-  try {
+  try {   
     const product = await Product.findById(req.params.id).lean().exec();
     return res.status(200).send(product);
   } catch (err) {
